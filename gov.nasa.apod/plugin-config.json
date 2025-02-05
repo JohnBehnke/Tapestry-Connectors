@@ -4,7 +4,8 @@
   "service_name": "NASA",
 	"icon": "https://images.nasa.gov/images/nasa_logo-sm.png",
 	"site": "https://apod.nasa.gov",
-	"check_interval": 21600, // Every 6 hours
-  "providesAttachments": true,
-  "item_style": "post",
+	"check_interval": 21600,
+  "providesAttachments": false,
+  "item_style": "article",
+	"default_color": "blue",
 }

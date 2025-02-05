@@ -1,76 +1,76 @@
 // com.astrobin.iotd
 
-var lastDate = null;
-const host = "https://astrobin.com";
-const apiPath = "api/v1";
-const minuteThreshold = 1440;
+const HOST = "https://astrobin.com";
+const API_URL = `${HOST}/api/v1`;
+const UPDATE_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
 
 function load() {
-  const authParams = `api_key=${apiKey}&api_secret=${apiSecret}`;
-  const date = new Date();
+  loadAsync().then(processResults).catch(processError);
+}
 
-  if (Math.floor((date - lastDate) / 1000 / 60) > minuteThreshold) {
-    let iotdUrl = `${host}/${apiPath}/imageoftheday?limit=1&${authParams}&format=json`;
-
-    sendRequest(iotdUrl)
-      .then((iotdRawData) => {
-        const parsedIOTDData = JSON.parse(iotdRawData);
-        const iotdInfo = parsedIOTDData["objects"][0];
-        const imageAPIPath = iotdInfo["image"];
-        const iotdDate = new Date(iotdInfo["date"]);
-        const imageUrl = `${host}${imageAPIPath}?${authParams}&format=json`;
-
-        sendRequest(imageUrl)
-          .then((imageRawData) => {
-            const parsedImageData = JSON.parse(imageRawData);
-            const imageUrl = parsedImageData["url_hd"];
-            const imageWidth = parsedImageData["w"];
-            const imageHeight = parsedImageData["h"];
-            const iotdUri = `${host}/${parsedImageData["hash"]}`;
-            const user = parsedImageData["user"];
-            const userUrl = `${host}/${apiPath}/userprofile?username=${user}&${authParams}&format=json`;
-            
-
-            sendRequest(userUrl)
-              .then((rawUserData) => {
-                const parsedUserData = JSON.parse(rawUserData);
-                const userInfo = parsedUserData["objects"][0];
-                const creatorUrl = `${host}/users/${userInfo["username"]}/`;
-                const creatorName = userInfo["real_name"];
-
-                const creator = Identity.createWithName(creatorName);
-                creator.uri = creatorUrl;
-                creator.avatar = userInfo["avatar"];
-
-                const attachment = MediaAttachment.createWithUrl(imageUrl);
-                attachment.aspectSize = { width: imageWidth, height: imageHeight };
-                attachment.focalPoint = { x: 0, y: 0 };
-
-                const likesText = `Likes: ${parsedImageData["likes"]}`;
-                const likesAnnotation = Annotation.createWithText(likesText);
-                const viewsText = `Views: ${parsedImageData["views"]}`;
-                const viewsAnnotation = Annotation.createWithText(viewsText);
-
-                var resultItem = Item.createWithUriDate(iotdUri, iotdDate);
-                resultItem.author = creator;
-                resultItem.title = parsedImageData["title"];
-                resultItem.body = `<p>${parsedImageData["description"]}</p>`;
-                resultItem.attachments = [attachment];
-                resultItem.annotations = [likesAnnotation, viewsAnnotation];
-
-                processResults([resultItem]);
-                lastDate = iotdDate;
-              })
-              .catch((requestError) => {
-                processError(requestError);
-              });
-          })
-          .catch((requestError) => {
-            processError(requestError);
-          });
-      })
-      .catch((requestError) => {
-        processError(requestError);
-      });
+async function getData(url) {
+  try {
+    return await sendRequest(url);
+  } catch (error) {
+    processError(error);
   }
+}
+
+async function loadAsync() {
+  const authParams = `api_key=${apiKey}&api_secret=${apiSecret}`;
+  const nowTimestamp = Date.now();
+
+  const lastUpdate = parseInt(getItem("lastUpdate"), 10);
+  if (lastUpdate && nowTimestamp < lastUpdate + UPDATE_INTERVAL) {
+    return;
+  }
+
+  const iotdUrl = `${API_URL}/imageoftheday?limit=1&${authParams}&format=json`;
+  const iotdJson = JSON.parse(await getData(iotdUrl));
+  
+  if (!iotdJson.objects.length) {
+    throw new Error("No Astrobin Image of the Day (IOTD) found.");
+  }
+
+  const iotdInfo = iotdJson.objects[0];
+  const { image: imageAPIPath, date: iotdDateString } = iotdInfo;
+  const iotdDate = new Date(iotdDateString);
+  const imageApiUrl = `${HOST}${imageAPIPath}?${authParams}&format=json`;
+
+  const imageJson = JSON.parse(await getData(imageApiUrl));
+  const { url_hd: imageUrl, w: imageWidth, h: imageHeight, hash: imageHash, user, title, description, likes, views } = imageJson;
+  const iotdUri = `${HOST}/${imageHash}`;
+
+  const userUrl = `${API_URL}/userprofile?username=${user}&${authParams}&format=json`;
+  const userJson = JSON.parse(await getData(userUrl));
+
+  if (!userJson.objects.length) {
+    throw new Error(`Astrobin user profile not found for ${user}`);
+  }
+
+  const { username, real_name: creatorName, avatar } = userJson.objects[0];
+  const creatorUrl = `${HOST}/users/${username}/`;
+
+  const creator = Identity.createWithName(creatorName);
+  creator.uri = creatorUrl;
+  creator.avatar = avatar;
+
+  const attachment = MediaAttachment.createWithUrl(imageUrl);
+  attachment.aspectSize = { width: imageWidth, height: imageHeight };
+  attachment.focalPoint = { x: 0, y: 0 };
+
+  const likesAnnotation = Annotation.createWithText(`Likes: ${likes}`);
+  const viewsAnnotation = Annotation.createWithText(`Views: ${views}`);
+  
+  const cleanDescription = description.replace(/\[img\].*?\[\/img\]/gi, '');
+  
+  const resultItem = Item.createWithUriDate(iotdUri, iotdDate);
+  resultItem.author = creator;
+  resultItem.title = title;
+  resultItem.body = `<p>${cleanDescription}</p>`;
+  resultItem.attachments = [attachment];
+  resultItem.annotations = [likesAnnotation, viewsAnnotation];
+
+  return [resultItem];
+  setItem("lastUpdate", String(nowTimestamp));
 }
