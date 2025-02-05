@@ -4,7 +4,7 @@
   "service_name": "Astrobin",
 	"icon": "https://images.squarespace-cdn.com/content/v1/5e333ecc5d21eb4f38e58863/1580418055713-GHUKGBP4E1AIODA77FR9/astrobin-64x64.png",
 	"site": "https://astrobin.com",
-	"check_interval": 86400,
   "providesAttachments": true,
   "item_style": "article",
+	"check_interval": 21600, // Every 6 hours
 }

@@ -1,0 +1,10 @@
+{
+	"id": "gov.nasa.apod",
+	"display_name": "Astronomy Picture of the Day",
+  "service_name": "NASA",
+	"icon": "https://images.nasa.gov/images/nasa_logo-sm.png",
+	"site": "https://apod.nasa.gov",
+	"check_interval": 21600, // Every 6 hours
+  "providesAttachments": true,
+  "item_style": "post",
+}

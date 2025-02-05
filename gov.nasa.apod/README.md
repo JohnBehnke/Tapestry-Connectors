@@ -1,0 +1,1 @@
+This connector gets the latest NASA APOD. [You'll need to apply for an API key](https://api.nasa.gov/#signUp)
