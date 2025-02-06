@@ -1,0 +1,28 @@
+{
+	"inputs": [
+		{
+			"name": "update_interval",
+			"type": "choices",
+			"prompt": "Update Interval",
+			"value": "10 minutes",
+			"choices": "1 minute, 5 minutes, 10 minutes, 30 minutes, 1 hour",
+			"placeholder": "Choose how often the ISS's location is updated"
+		},
+		{
+			"name": "maps_choice",
+			"type": "choices",
+			"prompt": "Map Choice",
+			"value": "Apple Maps",
+			"choices": "Apple Maps, Google Maps, OpenStreetMap",
+			"placeholder": "Choose what app to open the ISS's location in"
+		},
+		{
+			"name": "units",
+			"type": "choices",
+			"prompt": "Velocity Units",
+			"value": "km/h",
+			"choices": "km/h, mph",
+			"placeholder": "What unit system should the ISS's velocity be displayed in?"
+		},
+	]
+}
