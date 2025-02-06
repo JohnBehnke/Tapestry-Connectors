@@ -40,7 +40,9 @@ async function loadAsync() {
   const imageJson = JSON.parse(await getData(imageApiUrl));
   const { url_hd: imageUrl, w: imageWidth, h: imageHeight, hash: imageHash, user, title, description, likes, views } = imageJson;
   const iotdUri = `${HOST}/${imageHash}`;
-
+  
+  const safeDescription = (description === null || description === "null" || description === undefined) ? undefined : description;
+  
   const userUrl = `${API_URL}/userprofile?username=${user}&${authParams}&format=json`;
   const userJson = JSON.parse(await getData(userUrl));
 
@@ -65,7 +67,10 @@ async function loadAsync() {
   const resultItem = Item.createWithUriDate(iotdUri, iotdDate);
   resultItem.author = creator;
   resultItem.title = title;
-  resultItem.body = `<p>${description}</p>`;
+  
+  if (safeDescription) {
+    resultItem.body = `<p>${description}</p>`;
+  }
   resultItem.attachments = [attachment];
   resultItem.annotations = [likesAnnotation, viewsAnnotation];
 
