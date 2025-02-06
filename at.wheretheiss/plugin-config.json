@@ -1,0 +1,8 @@
+{
+	"id": "at.wheretheiss",
+	"display_name": "Where is the ISS",
+	"icon": "https://spotthestation.nasa.gov/images/favicon/apple-touch-icon-114x114.png",
+	"site": "https://wheretheiss.at",
+	"check_interval": 21600,
+	"default_color": "gold",
+}
