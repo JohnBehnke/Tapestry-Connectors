@@ -62,12 +62,10 @@ async function loadAsync() {
   const likesAnnotation = Annotation.createWithText(`Likes: ${likes}`);
   const viewsAnnotation = Annotation.createWithText(`Views: ${views}`);
   
-  const cleanDescription = description.replace(/\[img\].*?\[\/img\]/gi, '');
-  
   const resultItem = Item.createWithUriDate(iotdUri, iotdDate);
   resultItem.author = creator;
   resultItem.title = title;
-  resultItem.body = `<p>${cleanDescription}</p>`;
+  resultItem.body = `<p>${description}</p>`;
   resultItem.attachments = [attachment];
   resultItem.annotations = [likesAnnotation, viewsAnnotation];
 
